@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+@theme {
+  --color-beige-50: #fdfaf8;
+  --color-beige-100: #faf7f5;
+  --color-beige-200: #f5ede8;
+  --color-beige-300: #ede0d8;
+  --color-pink-50: #fdf2f4;
+  --color-pink-100: #fce4e9;
+  --color-pink-200: #f9c9d4;
+  --color-pink-300: #f4a3b5;
+  --color-pink-400: #ed7a96;
+  --color-pink-500: #e05578;
+  --color-pink-600: #cc3c61;
+  --color-rose-300: #e8b4b8;
+  --color-rose-400: #d4859a;
+  --color-rose-500: #c0607c;
+  --color-mauve-800: #5c4a56;
+  --color-mauve-700: #7a6270;
+  --color-mauve-600: #9a8490;
+  --color-mauve-500: #b8a8b2;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: #faf7f5;
+  color: #5c4a56;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #faf7f5;
+}
+::-webkit-scrollbar-thumb {
+  background: #e8b4b8;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #d4859a;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.35s ease-out forwards;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f5ede8 25%, #fdfaf8 50%, #f5ede8 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* Glass effect for cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(232, 180, 184, 0.3);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #d4859a, #e05578);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Recharts customization */
+.recharts-tooltip-wrapper {
+  outline: none;
+}
+
+/* Input focus styles */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* Transition utilities */
+.transition-smooth {
+  transition: all 0.2s ease;
+}
