@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ELiZampionship 🏆</title>
+
+  <!-- Supabase JS v2 (CDN – safe to expose anon key) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── Reset & Tokens ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --beige-50:  #fdfaf8;
+      --beige-100: #faf7f5;
+      --beige-200: #f5ede8;
+      --beige-300: #ede0d8;
+      --pink-100:  #fce4e9;
+      --pink-200:  #f9c9d4;
+      --pink-300:  #f4a3b5;
+      --pink-400:  #ed7a96;
+      --pink-500:  #e05578;
+      --rose-300:  #e8b4b8;
+      --rose-400:  #d4859a;
+      --rose-500:  #c0607c;
+      --mauve-400: #b8a8b2;
+      --mauve-500: #9a8490;
+      --mauve-600: #7a6270;
+      --mauve-700: #614e5a;
+      --mauve-800: #4a3845;
+      --gold:      #f5c842;
+      --silver:    #b0b8c1;
+      --bronze:    #cd7f32;
+      --white:     #ffffff;
+      --shadow-sm: 0 1px 3px rgba(80,40,60,.08), 0 1px 2px rgba(80,40,60,.04);
+      --shadow-md: 0 4px 12px rgba(80,40,60,.10), 0 2px 4px rgba(80,40,60,.06);
+      --shadow-lg: 0 10px 30px rgba(80,40,60,.12), 0 4px 8px rgba(80,40,60,.08);
+      --radius:    16px;
+      --radius-sm: 10px;
+      --transition: .2s ease;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--beige-100);
+      color: var(--mauve-700);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Utility ─────────────────────────────────────────── */
+    .hidden   { display: none !important; }
+    .sr-only  { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      padding: 10px 20px; border-radius: var(--radius-sm); border: none;
+      font-family: inherit; font-size: .875rem; font-weight: 600;
+      cursor: pointer; transition: all var(--transition); text-decoration: none;
+    }
+    .btn:disabled { opacity: .55; cursor: not-allowed; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--pink-400), var(--rose-400));
+      color: var(--white); box-shadow: 0 2px 8px rgba(212,133,154,.35);
+    }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.05); box-shadow: 0 4px 14px rgba(212,133,154,.5); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--mauve-600); border: 1.5px solid var(--beige-300);
+    }
+    .btn-ghost:hover:not(:disabled) { background: var(--beige-200); }
+    .btn-danger {
+      background: #fff0f0; color: #c0392b; border: 1.5px solid #ffd5d5;
+    }
+    .btn-danger:hover:not(:disabled) { background: #ffe0e0; }
+    .btn-sm { padding: 6px 14px; font-size: .8rem; border-radius: 8px; }
+
+    input, textarea, select {
+      font-family: inherit; font-size: .875rem; color: var(--mauve-800);
+      background: var(--beige-50); border: 1.5px solid var(--beige-300);
+      border-radius: var(--radius-sm); padding: 10px 14px; width: 100%;
+      transition: border-color var(--transition), background var(--transition);
+      outline: none;
+    }
+    input:focus, textarea:focus, select:focus { border-color: var(--pink-300); background: var(--white); }
+    input::placeholder, textarea::placeholder { color: var(--mauve-400); }
+
+    label { display: block; font-size: .8rem; font-weight: 600; color: var(--mauve-600); margin-bottom: 5px; }
+
+    .field { margin-bottom: 14px; }
+
+    .card {
+      background: var(--white); border-radius: var(--radius);
+      box-shadow: var(--shadow-sm); border: 1px solid var(--beige-200);
+    }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px; font-size: .75rem; font-weight: 600;
+    }
+    .badge-pink   { background: var(--pink-100);  color: var(--rose-500); }
+    .badge-gold   { background: #fef8e7;           color: #b8860b; }
+    .badge-admin  { background: #e8f5e9;           color: #2e7d32; }
+
+    .alert {
+      padding: 10px 14px; border-radius: var(--radius-sm); font-size: .8rem; font-weight: 500;
+      margin-top: 10px;
+    }
+    .alert-error   { background: #fff0f0; color: #c0392b; border: 1px solid #ffd5d5; }
+    .alert-success { background: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
+
+    .spinner {
+      width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.4);
+      border-top-color: var(--white); border-radius: 50%; animation: spin .7s linear infinite;
+    }
+    .spinner-dark { border-color: var(--beige-300); border-top-color: var(--rose-400); }
+
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes fadeUp  { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:none; } }
+    @keyframes shimmer { from { background-position: -200% 0; } to { background-position: 200% 0; } }
+
+    .animate-in { animation: fadeUp .35s ease both; }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--beige-200) 25%, var(--beige-50) 50%, var(--beige-200) 75%);
+      background-size: 200% 100%; animation: shimmer 1.4s infinite; border-radius: 8px;
+    }
+
+    /* ─── Layout ───────────────────────────────────────────── */
+    #app { min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* ─── NAV ──────────────────────────────────────────────── */
+    #nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(250,247,245,.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--beige-200);
+    }
+    .nav-inner {
+      max-width: 900px; margin: 0 auto; padding: 0 20px;
+      height: 60px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .nav-logo-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: linear-gradient(135deg, var(--pink-300), var(--rose-400));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; box-shadow: 0 2px 6px rgba(212,133,154,.4);
+    }
+    .nav-logo-text { font-weight: 800; font-size: 1rem; color: var(--mauve-800); letter-spacing: -.3px; }
+    .nav-logo-text span { color: var(--rose-400); }
+    .nav-actions { display: flex; align-items: center; gap: 8px; }
+
+    /* ─── HERO ─────────────────────────────────────────────── */
+    #hero {
+      background: linear-gradient(160deg, var(--pink-100) 0%, var(--beige-100) 60%);
+      border-bottom: 1px solid var(--beige-200); padding: 48px 20px 40px; text-align: center;
+    }
+    #hero h1 {
+      font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800;
+      color: var(--mauve-800); letter-spacing: -1px; line-height: 1.15;
+    }
+    #hero h1 span { color: var(--rose-400); }
+    #hero p { color: var(--mauve-500); margin-top: 8px; font-size: .95rem; }
+    .hero-blobs { position: relative; overflow: hidden; }
+    .blob {
+      position: absolute; border-radius: 50%; filter: blur(60px); opacity: .4; pointer-events: none;
+    }
+    .blob-1 { width:300px; height:300px; background:var(--pink-200); top:-100px; right:-80px; }
+    .blob-2 { width:200px; height:200px; background:var(--rose-300); bottom:-80px; left:-50px; }
+
+    /* ─── MAIN ─────────────────────────────────────────────── */
+    #main { max-width: 900px; margin: 0 auto; padding: 32px 20px 60px; flex: 1; width: 100%; }
+
+    /* ─── LOGIN MODAL ──────────────────────────────────────── */
+    #modal-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(74,56,69,.35); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    #modal-box {
+      background: var(--white); border-radius: 24px; padding: 36px 32px;
+      width: 100%; max-width: 400px; box-shadow: var(--shadow-lg);
+      animation: fadeUp .25s ease both;
+    }
+    #modal-box h2 { font-size: 1.35rem; font-weight: 700; color: var(--mauve-800); margin-bottom: 4px; }
+    #modal-box p  { font-size: .85rem; color: var(--mauve-500); margin-bottom: 20px; }
+    .modal-close {
+      position: absolute; top: 14px; right: 14px; background: none; border: none;
+      font-size: 1.2rem; cursor: pointer; color: var(--mauve-400); line-height: 1;
+    }
+
+    /* ─── LEADERBOARD ──────────────────────────────────────── */
+    .section-title {
+      font-size: 1.05rem; font-weight: 700; color: var(--mauve-800);
+      margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+    }
+
+    #tabs {
+      display: flex; gap: 4px; background: var(--white); border: 1px solid var(--beige-200);
+      border-radius: var(--radius-sm); padding: 4px; width: fit-content; margin-bottom: 20px;
+    }
+    .tab-btn {
+      padding: 7px 18px; border-radius: 8px; border: none; background: none;
+      font-family: inherit; font-size: .82rem; font-weight: 600; cursor: pointer;
+      color: var(--mauve-500); transition: all var(--transition);
+    }
+    .tab-btn.active { background: var(--pink-100); color: var(--rose-500); }
+
+    /* Leaderboard table */
+    .lb-table { width: 100%; border-collapse: collapse; }
+    .lb-table th {
+      text-align: left; font-size: .72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--mauve-500); padding: 8px 12px;
+      border-bottom: 1.5px solid var(--beige-200);
+    }
+    .lb-table td { padding: 10px 12px; border-bottom: 1px solid var(--beige-100); font-size: .875rem; }
+    .lb-table tr:last-child td { border-bottom: none; }
+    .lb-table tr:hover td { background: var(--beige-50); }
+
+    .rank-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 8px; font-size: .8rem; font-weight: 700;
+    }
+    .rank-1 { background: #fef8e7; color: #b8860b; }
+    .rank-2 { background: #f0f4f8; color: #708090; }
+    .rank-3 { background: #fff3e6; color: #a0522d; }
+    .rank-n { background: var(--beige-100); color: var(--mauve-500); font-size: .75rem; }
+
+    .participant-info { display: flex; align-items: center; gap: 10px; }
+    .participant-avatar {
+      width: 34px; height: 34px; border-radius: 10px; object-fit: cover;
+      background: var(--pink-100); display: flex; align-items: center;
+      justify-content: center; font-weight: 700; color: var(--rose-400); font-size: .85rem;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .participant-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .participant-name { font-weight: 600; color: var(--mauve-800); }
+    .participant-team { font-size: .75rem; color: var(--mauve-400); }
+
+    .pts-cell { font-weight: 700; color: var(--mauve-800); }
+    .pts-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .pts-bar {
+      flex: 1; height: 5px; background: var(--beige-200); border-radius: 3px; overflow: hidden;
+    }
+    .pts-bar-fill { height: 100%; background: linear-gradient(90deg, var(--pink-300), var(--rose-400)); border-radius: 3px; transition: width .5s ease; }
+
+    /* ─── ADMIN PANEL ──────────────────────────────────────── */
+    #admin-panel { margin-top: 40px; border-top: 2px dashed var(--beige-300); padding-top: 32px; }
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+
+    .admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 640px) { .admin-grid { grid-template-columns: 1fr; } }
+
+    .admin-section h3 { font-size: .9rem; font-weight: 700; color: var(--mauve-700); margin-bottom: 12px; }
+
+    /* Inline list items */
+    .list-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; background: var(--beige-50); border-radius: var(--radius-sm);
+      margin-bottom: 6px; border: 1px solid var(--beige-200);
+    }
+    .list-item-name { flex: 1; font-size: .85rem; font-weight: 500; color: var(--mauve-800); min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-item-actions { display: flex; gap: 5px; flex-shrink: 0; }
+
+    /* Score input matrix */
+    .score-matrix { overflow-x: auto; }
+    .score-matrix table { width: 100%; border-collapse: collapse; white-space: nowrap; }
+    .score-matrix th {
+      font-size: .72rem; font-weight: 700; color: var(--mauve-500); text-transform: uppercase;
+      padding: 6px 8px; border-bottom: 1.5px solid var(--beige-200);
+    }
+    .score-matrix td { padding: 6px 8px; border-bottom: 1px solid var(--beige-100); }
+    .score-matrix input[type="number"] {
+      width: 70px; padding: 5px 8px; text-align: center; font-size: .82rem;
+    }
+
+    /* ─── Empty & Loading ──────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 48px 20px; color: var(--mauve-400);
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .empty-state p { font-size: .9rem; }
+
+    /* ─── Responsive ───────────────────────────────────────── */
+    @media (max-width: 520px) {
+      .nav-inner { padding: 0 14px; }
+      #main { padding: 20px 14px 40px; }
+      #modal-box { padding: 28px 20px; }
+      .lb-table th:nth-child(3), .lb-table td:nth-child(3) { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── NAV ───────────────────────────────────────────────── -->
+  <nav id="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <div class="nav-logo-icon">🏆</div>
+        <span class="nav-logo-text">ELi<span>Zampionship</span></span>
+      </a>
+      <div class="nav-actions">
+        <!-- shown when logged out -->
+        <button id="btn-open-login" class="btn btn-ghost btn-sm">🔒 Admin Login</button>
+        <!-- shown when logged in -->
+        <span id="admin-badge" class="badge badge-admin hidden">⚙️ Admin</span>
+        <button id="btn-logout" class="btn btn-ghost btn-sm hidden">Sign Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ── HERO ──────────────────────────────────────────────── -->
+  <header id="hero" class="hero-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <h1>🏆 ELi<span>Zampionship</span></h1>
+    <p>Live leaderboard · Updated in real-time</p>
+  </header>
+
+  <!-- ── MAIN ──────────────────────────────────────────────── -->
+  <main id="main">
+
+    <!-- LEADERBOARD -->
+    <section id="section-leaderboard" class="animate-in">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+        <div class="section-title">📊 Leaderboard</div>
+        <div id="tabs">
+          <button class="tab-btn active" data-tab="overall">Overall</button>
+          <button class="tab-btn" data-tab="byround">By Round</button>
+        </div>
+      </div>
+
+      <!-- Overall tab -->
+      <div id="tab-overall" class="card" style="overflow:hidden;">
+        <table class="lb-table" id="lb-overall-table">
+          <thead>
+            <tr>
+              <th style="width:44px;">#</th>
+              <th>Participant</th>
+              <th>Team</th>
+              <th>Total Points</th>
+              <th style="min-width:140px;"></th>
+            </tr>
+          </thead>
+          <tbody id="lb-overall-body">
+            <tr><td colspan="5"><div class="skeleton" style="height:40px;margin:8px 12px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- By-round tab -->
+      <div id="tab-byround" class="hidden card" style="overflow:hidden;">
+        <div id="byround-content">
+          <div class="skeleton" style="height:180px;margin:12px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADMIN PANEL (shown only when authenticated) -->
+    <section id="admin-panel" class="hidden animate-in">
+      <div class="admin-header">
+        <div class="section-title">⚙️ Admin Panel</div>
+      </div>
+
+      <div class="admin-grid">
+
+        <!-- Participants -->
+        <div class="admin-section card" style="padding:20px;">
+          <h3>👥 Participants</h3>
+          <div id="admin-participants-list"></div>
+          <form id="form-participant" style="margin-top:12px;">
+            <div class="field">
+              <label>Name *</label>
+              <input type="text" id="p-name" placeholder="e.g. Jane Smith" required />
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              <div class="field">
+                <label>Team</label>
+                <input type="text" id="p-team" placeholder="e.g. Dev" />
+              </div>
+              <div class="field">
+                <label>Photo URL</label>
+                <input type="url" id="p-photo" placeholder="https://..." />
+              </div>
+            </div>
+            <div id="p-msg"></div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width:100%;margin-top:4px;" id="p-save-btn">
+              ➕ Add Participant
+            </button>
+          </form>
+        </div>
+
+        <!-- Score Labels (Rounds) -->
+        <div class="admin-section card" style="padding:20px;">
+          <h3>📋 Score Categories / Rounds</h3>
+          <div id="admin-labels-list"></div>
+          <form id="form-label" style="margin-top:12px;">
+            <div class="field">
+              <label>Label name *</label>
+              <input type="text" id="l-name" placeholder='e.g. "Round 1" or "May"' required />
+            </div>
+            <div id="l-msg"></div>
+            <button type="submit" class="btn btn-primary btn-sm" style="width:100%;margin-top:4px;" id="l-save-btn">
+              ➕ Add Category
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Score matrix -->
+      <div class="card" style="padding:20px;margin-top:20px;">
+        <h3 class="admin-section" style="font-size:.9rem;font-weight:700;color:var(--mauve-700);margin-bottom:14px;">⭐ Input Scores</h3>
+        <div class="score-matrix" id="score-matrix-wrap">
+          <div class="empty-state"><p>Add participants and categories above to start entering scores.</p></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btn-save-scores">💾 Save All Scores</button>
+          <span id="scores-msg" style="font-size:.82rem;"></span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div><!-- #app -->
+
+<!-- ── LOGIN MODAL ────────────────────────────────────────── -->
+<div id="modal-overlay" class="hidden">
+  <div id="modal-box" style="position:relative;">
+    <button class="modal-close" id="btn-close-modal" aria-label="Close">✕</button>
+    <h2>Admin Login</h2>
+    <p>Sign in to manage participants and scores.</p>
+    <form id="form-login">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="admin@yourcompany.com" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" minlength="6" />
+      </div>
+      <div id="login-msg"></div>
+      <button type="submit" class="btn btn-primary" style="width:100%;margin-top:8px;" id="login-btn">
+        Sign In
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  // ──────────────────────────────────────────────────────────
+  // CONFIG – replace with your Supabase project values.
+  // These are SAFE to expose publicly (anon key has RLS).
+  // ──────────────────────────────────────────────────────────
+  const SUPABASE_URL  = 'YOUR_SUPABASE_URL'   // e.g. https://xxxx.supabase.co
+  const SUPABASE_ANON = 'YOUR_SUPABASE_ANON_KEY'
+
+  const { createClient } = supabase
+  const db = createClient(SUPABASE_URL, SUPABASE_ANON)
+
+  // ──────────────────────────────────────────────────────────
+  // STATE
+  // ──────────────────────────────────────────────────────────
+  let session       = null
+  let participants  = []
+  let scoreLabels   = []
+  let scores        = []        // flat array of {participant_id, label_id, points}
+  let pendingScores = {}        // {`${pid}_${lid}`: points} – unsaved changes
+
+  // ──────────────────────────────────────────────────────────
+  // DOM HELPERS
+  // ──────────────────────────────────────────────────────────
+  const $  = (sel, ctx = document) => ctx.querySelector(sel)
+  const $$ = (sel, ctx = document) => [...ctx.querySelectorAll(sel)]
+
+  function showMsg(el, text, type = 'success') {
+    el.innerHTML = ''
+    if (!text) return
+    const d = document.createElement('div')
+    d.className = `alert alert-${type}`
+    d.textContent = text
+    el.appendChild(d)
+  }
+
+  function avatarEl(p) {
+    const wrap = document.createElement('div')
+    wrap.className = 'participant-avatar'
+    if (p.photo_url) {
+      const img = document.createElement('img')
+      img.src = p.photo_url; img.alt = p.name
+      img.onerror = () => { wrap.textContent = p.name[0].toUpperCase() }
+      wrap.appendChild(img)
+    } else {
+      wrap.textContent = p.name[0].toUpperCase()
+    }
+    return wrap
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // FETCH DATA
+  // ──────────────────────────────────────────────────────────
+  async function fetchAll() {
+    const [p, l, s] = await Promise.all([
+      db.from('participants').select('*').order('name'),
+      db.from('score_labels').select('*').order('sort_order').order('created_at'),
+      db.from('scores').select('*'),
+    ])
+    participants = p.data || []
+    scoreLabels  = l.data || []
+    scores       = s.data || []
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // LEADERBOARD – OVERALL
+  // ──────────────────────────────────────────────────────────
+  function renderOverall() {
+    const tbody = $('#lb-overall-body')
+    tbody.innerHTML = ''
+
+    if (!participants.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="icon">🏁</div><p>No participants yet.</p></div></td></tr>`
+      return
+    }
+
+    // Sum points per participant
+    const totals = participants.map(p => ({
+      ...p,
+      total: scores.filter(s => s.participant_id === p.id).reduce((acc, s) => acc + (s.points || 0), 0)
+    })).sort((a, b) => b.total - a.total)
+
+    const maxPts = totals[0]?.total || 1
+
+    totals.forEach((p, i) => {
+      const rank = i + 1
+      const pct  = Math.round((p.total / maxPts) * 100)
+      const rankClass = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-n'
+      const rankSymbol = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : rank
+
+      const tr = document.createElement('tr')
+      tr.innerHTML = `
+        <td><span class="rank-badge ${rankClass}">${rankSymbol}</span></td>
+        <td>
+          <div class="participant-info">
+            <div class="participant-name">${p.name}</div>
+          </div>
+        </td>
+        <td><span class="badge badge-pink" style="display:${p.team?'inline-flex':'none'}">${p.team||''}</span></td>
+        <td class="pts-cell">${p.total} pts</td>
+        <td>
+          <div class="pts-bar-wrap">
+            <div class="pts-bar"><div class="pts-bar-fill" style="width:${pct}%"></div></div>
+            <span style="font-size:.72rem;color:var(--mauve-400);width:34px;text-align:right">${pct}%</span>
+          </div>
+        </td>`
+
+      // insert avatar
+      const infoCell = tr.querySelector('.participant-info')
+      infoCell.insertBefore(avatarEl(p), infoCell.firstChild)
+      tbody.appendChild(tr)
+    })
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // LEADERBOARD – BY ROUND
+  // ──────────────────────────────────────────────────────────
+  function renderByRound() {
+    const wrap = $('#byround-content')
+    wrap.innerHTML = ''
+
+    if (!scoreLabels.length || !participants.length) {
+      wrap.innerHTML = '<div class="empty-state"><div class="icon">📋</div><p>No rounds or participants yet.</p></div>'
+      return
+    }
+
+    const table = document.createElement('table')
+    table.className = 'lb-table'
+
+    // Header
+    const thead = document.createElement('thead')
+    const hr = document.createElement('tr')
+    hr.innerHTML = '<th>Participant</th>'
+    scoreLabels.forEach(l => {
+      const th = document.createElement('th')
+      th.textContent = l.label
+      hr.appendChild(th)
+    })
+    const thTotal = document.createElement('th')
+    thTotal.textContent = 'Total'
+    hr.appendChild(thTotal)
+    thead.appendChild(hr)
+    table.appendChild(thead)
+
+    // Rows sorted by total
+    const sorted = [...participants].sort((a, b) => {
+      const ta = scores.filter(s=>s.participant_id===a.id).reduce((acc,s)=>acc+s.points,0)
+      const tb = scores.filter(s=>s.participant_id===b.id).reduce((acc,s)=>acc+s.points,0)
+      return tb - ta
+    })
+
+    const tbody = document.createElement('tbody')
+    sorted.forEach(p => {
+      const tr = document.createElement('tr')
+      const nameTd = document.createElement('td')
+      const info = document.createElement('div')
+      info.className = 'participant-info'
+      info.appendChild(avatarEl(p))
+      const nm = document.createElement('span')
+      nm.className = 'participant-name'
+      nm.textContent = p.name
+      info.appendChild(nm)
+      nameTd.appendChild(info)
+      tr.appendChild(nameTd)
+
+      let total = 0
+      scoreLabels.forEach(l => {
+        const s = scores.find(sc => sc.participant_id === p.id && sc.label_id === l.id)
+        const pts = s?.points || 0
+        total += pts
+        const td = document.createElement('td')
+        td.style.cssText = 'text-align:center;font-weight:600;'
+        td.textContent = pts || '—'
+        tr.appendChild(td)
+      })
+
+      const tdTotal = document.createElement('td')
+      tdTotal.className = 'pts-cell'
+      tdTotal.textContent = `${total} pts`
+      tr.appendChild(tdTotal)
+      tbody.appendChild(tr)
+    })
+
+    table.appendChild(tbody)
+    wrap.appendChild(table)
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // ADMIN: PARTICIPANTS LIST
+  // ──────────────────────────────────────────────────────────
+  function renderAdminParticipants() {
+    const wrap = $('#admin-participants-list')
+    wrap.innerHTML = ''
+    if (!participants.length) {
+      wrap.innerHTML = '<p style="font-size:.8rem;color:var(--mauve-400);margin-bottom:8px;">No participants yet.</p>'
+      return
+    }
+    participants.forEach(p => {
+      const div = document.createElement('div')
+      div.className = 'list-item'
+      div.innerHTML = `
+        <div class="list-item-name">${p.name}${p.team ? ` <span style="color:var(--mauve-400)">· ${p.team}</span>` : ''}</div>
+        <div class="list-item-actions">
+          <button class="btn btn-danger btn-sm" data-id="${p.id}" data-type="participant">✕</button>
+        </div>`
+      wrap.appendChild(div)
+    })
+    $$('[data-type="participant"]', wrap).forEach(btn => {
+      btn.addEventListener('click', () => deleteParticipant(btn.dataset.id))
+    })
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // ADMIN: SCORE LABELS LIST
+  // ──────────────────────────────────────────────────────────
+  function renderAdminLabels() {
+    const wrap = $('#admin-labels-list')
+    wrap.innerHTML = ''
+    if (!scoreLabels.length) {
+      wrap.innerHTML = '<p style="font-size:.8rem;color:var(--mauve-400);margin-bottom:8px;">No categories yet.</p>'
+      return
+    }
+    scoreLabels.forEach(l => {
+      const div = document.createElement('div')
+      div.className = 'list-item'
+      div.innerHTML = `
+        <div class="list-item-name">${l.label}</div>
+        <div class="list-item-actions">
+          <button class="btn btn-danger btn-sm" data-id="${l.id}" data-type="label">✕</button>
+        </div>`
+      wrap.appendChild(div)
+    })
+    $$('[data-type="label"]', wrap).forEach(btn => {
+      btn.addEventListener('click', () => deleteLabel(btn.dataset.id))
+    })
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // ADMIN: SCORE MATRIX
+  // ──────────────────────────────────────────────────────────
+  function renderScoreMatrix() {
+    const wrap = $('#score-matrix-wrap')
+    wrap.innerHTML = ''
+
+    if (!participants.length || !scoreLabels.length) {
+      wrap.innerHTML = '<div class="empty-state"><p>Add participants and categories above to start entering scores.</p></div>'
+      return
+    }
+
+    const table = document.createElement('table')
+    table.style.width = '100%'
+
+    // Header
+    const thead = document.createElement('thead')
+    const hr = document.createElement('tr')
+    hr.innerHTML = '<th>Participant</th>'
+    scoreLabels.forEach(l => {
+      const th = document.createElement('th')
+      th.textContent = l.label
+      hr.appendChild(th)
+    })
+    thead.appendChild(hr)
+    table.appendChild(thead)
+
+    // Rows
+    const tbody = document.createElement('tbody')
+    participants.forEach(p => {
+      const tr = document.createElement('tr')
+      const nameTd = document.createElement('td')
+      nameTd.style.cssText = 'font-weight:600;font-size:.85rem;color:var(--mauve-800);white-space:nowrap;'
+      nameTd.textContent = p.name
+      tr.appendChild(nameTd)
+
+      scoreLabels.forEach(l => {
+        const key = `${p.id}_${l.id}`
+        const existing = scores.find(s => s.participant_id === p.id && s.label_id === l.id)
+        const currentVal = pendingScores.hasOwnProperty(key) ? pendingScores[key] : (existing?.points ?? '')
+
+        const td = document.createElement('td')
+        const inp = document.createElement('input')
+        inp.type = 'number'
+        inp.min = '0'
+        inp.step = '1'
+        inp.value = currentVal
+        inp.placeholder = '0'
+        inp.dataset.pid = p.id
+        inp.dataset.lid = l.id
+        inp.addEventListener('input', () => {
+          pendingScores[key] = inp.value === '' ? 0 : parseInt(inp.value, 10) || 0
+        })
+        td.appendChild(inp)
+        tr.appendChild(td)
+      })
+
+      tbody.appendChild(tr)
+    })
+
+    table.appendChild(tbody)
+    wrap.appendChild(table)
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // RENDER ALL (public + admin)
+  // ──────────────────────────────────────────────────────────
+  function renderAll() {
+    renderOverall()
+    renderByRound()
+    if (session) {
+      renderAdminParticipants()
+      renderAdminLabels()
+      renderScoreMatrix()
+    }
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // DATA MUTATIONS
+  // ──────────────────────────────────────────────────────────
+  async function deleteParticipant(id) {
+    if (!confirm('Delete this participant and all their scores?')) return
+    await db.from('participants').delete().eq('id', id)
+    await fetchAll(); pendingScores = {}; renderAll()
+  }
+
+  async function deleteLabel(id) {
+    if (!confirm('Delete this category and all its scores?')) return
+    await db.from('score_labels').delete().eq('id', id)
+    await fetchAll(); pendingScores = {}; renderAll()
+  }
+
+  // ──────────────────────────────────────────────────────────
+  // FORMS
+  // ──────────────────────────────────────────────────────────
+
+  // Add participant
+  $('#form-participant').addEventListener('submit', async e => {
+    e.preventDefault()
+    const btn = $('#p-save-btn')
+    const msg = $('#p-msg')
+    const name = $('#p-name').value.trim()
+    if (!name) return
+
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span> Saving…'
+    const { error } = await db.from('participants').insert({
+      name,
+      team:      $('#p-team').value.trim() || null,
+      photo_url: $('#p-photo').value.trim() || null,
+    })
+    btn.disabled = false
+    btn.innerHTML = '➕ Add Participant'
+
+    if (error) { showMsg(msg, error.message, 'error'); return }
+    showMsg(msg, `${name} added!`, 'success')
+    e.target.reset()
+    await fetchAll(); renderAll()
+    setTimeout(() => showMsg(msg, ''), 3000)
+  })
+
+  // Add label
+  $('#form-label').addEventListener('submit', async e => {
+    e.preventDefault()
+    const btn = $('#l-save-btn')
+    const msg = $('#l-msg')
+    const label = $('#l-name').value.trim()
+    if (!label) return
+
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span> Saving…'
+    const { error } = await db.from('score_labels').insert({
+      label,
+      sort_order: scoreLabels.length,
+    })
+    btn.disabled = false
+    btn.innerHTML = '➕ Add Category'
+
+    if (error) { showMsg(msg, error.message, 'error'); return }
+    showMsg(msg, `"${label}" added!`, 'success')
+    e.target.reset()
+    await fetchAll(); renderAll()
+    setTimeout(() => showMsg(msg, ''), 3000)
+  })
+
+  // Save scores
+  $('#btn-save-scores').addEventListener('click', async () => {
+    const btn = $('#btn-save-scores')
+    const msg = $('#scores-msg')
+    msg.textContent = ''
+
+    if (!Object.keys(pendingScores).length) {
+      msg.textContent = 'No changes to save.'
+      return
+    }
+
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span> Saving…'
+
+    const upserts = Object.entries(pendingScores).map(([key, points]) => {
+      const [participant_id, label_id] = key.split('_')
+      return { participant_id, label_id, points, updated_at: new Date().toISOString() }
+    })
+
+    const { error } = await db.from('scores').upsert(upserts, { onConflict: 'participant_id,label_id' })
+
+    btn.disabled = false
+    btn.innerHTML = '💾 Save All Scores'
+
+    if (error) {
+      msg.style.color = '#c0392b'; msg.textContent = `Error: ${error.message}`
+      return
+    }
+
+    msg.style.color = '#276749'; msg.textContent = '✅ Scores saved!'
+    pendingScores = {}
+    await fetchAll(); renderAll()
+    setTimeout(() => { msg.textContent = '' }, 4000)
+  })
+
+  // ──────────────────────────────────────────────────────────
+  // AUTH
+  // ──────────────────────────────────────────────────────────
+  function applySession(s) {
+    session = s
+    const loggedIn = !!s
+    $('#btn-open-login').classList.toggle('hidden', loggedIn)
+    $('#admin-badge').classList.toggle('hidden', !loggedIn)
+    $('#btn-logout').classList.toggle('hidden', !loggedIn)
+    $('#admin-panel').classList.toggle('hidden', !loggedIn)
+  }
+
+  // Login form
+  $('#form-login').addEventListener('submit', async e => {
+    e.preventDefault()
+    const btn  = $('#login-btn')
+    const msg  = $('#login-msg')
+    const email    = $('#login-email').value.trim()
+    const password = $('#login-password').value
+
+    btn.disabled = true
+    btn.innerHTML = '<span class="spinner"></span> Signing in…'
+    const { error } = await db.auth.signInWithPassword({ email, password })
+    btn.disabled = false
+    btn.innerHTML = 'Sign In'
+
+    if (error) { showMsg(msg, error.message, 'error'); return }
+
+    $('#modal-overlay').classList.add('hidden')
+    $('#form-login').reset()
+    showMsg(msg, '', '')
+  })
+
+  $('#btn-logout').addEventListener('click', () => db.auth.signOut())
+  $('#btn-open-login').addEventListener('click', () => $('#modal-overlay').classList.remove('hidden'))
+  $('#btn-close-modal').addEventListener('click', () => $('#modal-overlay').classList.add('hidden'))
+  $('#modal-overlay').addEventListener('click', e => { if (e.target === $('#modal-overlay')) $('#modal-overlay').classList.add('hidden') })
+
+  // Listen to auth changes
+  db.auth.onAuthStateChange(async (_event, s) => {
+    applySession(s)
+    if (s) { await fetchAll(); renderAll() }
+  })
+
+  // ──────────────────────────────────────────────────────────
+  // TABS
+  // ──────────────────────────────────────────────────────────
+  $$('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('.tab-btn').forEach(b => b.classList.remove('active'))
+      btn.classList.add('active')
+      const tab = btn.dataset.tab
+      $('#tab-overall').classList.toggle('hidden', tab !== 'overall')
+      $('#tab-byround').classList.toggle('hidden', tab !== 'byround')
+      if (tab === 'byround') renderByRound()
+    })
+  })
+
+  // ──────────────────────────────────────────────────────────
+  // REAL-TIME SUBSCRIPTIONS (live leaderboard updates)
+  // ──────────────────────────────────────────────────────────
+  db.channel('public-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, async () => { await fetchAll(); renderAll() })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'score_labels' }, async () => { await fetchAll(); renderAll() })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'scores' },       async () => { await fetchAll(); renderAll() })
+    .subscribe()
+
+  // ──────────────────────────────────────────────────────────
+  // INIT
+  // ──────────────────────────────────────────────────────────
+  ;(async () => {
+    const { data: { session: s } } = await db.auth.getSession()
+    applySession(s)
+    await fetchAll()
+    renderAll()
+  })()
+</script>
+</body>
+</html>
